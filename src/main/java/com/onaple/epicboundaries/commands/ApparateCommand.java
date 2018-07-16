@@ -37,13 +37,14 @@ public class ApparateCommand implements CommandExecutor {
             player = playerOpt.get();
         }
 
-        Optional<World> worldOpt = Sponge.getServer().getWorld(worldName);
+        Optional<World> worldOpt = Sponge.getServer().loadWorld(worldName);
         if (!worldOpt.isPresent()) {
             src.sendMessage(Text.of("World " + worldName + " doesn't exist."));
             return CommandResult.empty();
         }
+        World world = worldOpt.get();
 
-        player.transferToWorld(worldOpt.get());
+        player.transferToWorld(world, world.getSpawnLocation().getPosition());
         return CommandResult.success();
     }
 }
