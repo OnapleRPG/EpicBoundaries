@@ -2,6 +2,7 @@ package com.onaple.epicboundaries;
 
 
 import com.onaple.epicboundaries.commands.ApparateCommand;
+import com.onaple.epicboundaries.commands.CreateInstanceCommand;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.args.GenericArguments;
@@ -34,8 +35,16 @@ public class EpicBoundaries {
                         GenericArguments.optional(GenericArguments.player(Text.of("player"))))
                 .executor(new ApparateCommand())
                 .build();
+        CommandSpec copyWorldSpec = CommandSpec.builder()
+                .description(Text.of("Create an instance from an existing world"))
+                .permission("epicboundaries.command.createinstance")
+                .arguments(GenericArguments.onlyOne(GenericArguments.string(Text.of("world"))),
+                        GenericArguments.onlyOne(GenericArguments.string(Text.of("suffix"))))
+                .executor(new CreateInstanceCommand())
+                .build();
 
         Sponge.getCommandManager().register(this, apparateSpec, "apparate");
+        Sponge.getCommandManager().register(this, copyWorldSpec, "create-instance");
 
         logger.info("EPICBOUNDARIES initialized.");
     }
