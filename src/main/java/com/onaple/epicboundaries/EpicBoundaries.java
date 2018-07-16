@@ -39,7 +39,8 @@ public class EpicBoundaries {
                 .description(Text.of("Create an instance from an existing world"))
                 .permission("epicboundaries.command.createinstance")
                 .arguments(GenericArguments.onlyOne(GenericArguments.string(Text.of("world"))),
-                        GenericArguments.onlyOne(GenericArguments.string(Text.of("suffix"))))
+                        GenericArguments.onlyOne(GenericArguments.string(Text.of("suffix"))),
+                        GenericArguments.optional(GenericArguments.player(Text.of("player"))))
                 .executor(new CreateInstanceCommand())
                 .build();
 

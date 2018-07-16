@@ -1,5 +1,6 @@
 package com.onaple.epicboundaries.commands;
 
+import com.onaple.epicboundaries.WorldAction;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -44,7 +45,7 @@ public class ApparateCommand implements CommandExecutor {
         }
         World world = worldOpt.get();
 
-        player.transferToWorld(world, world.getSpawnLocation().getPosition());
+        WorldAction.transferPlayerToWorld(player, world);
         return CommandResult.success();
     }
 }

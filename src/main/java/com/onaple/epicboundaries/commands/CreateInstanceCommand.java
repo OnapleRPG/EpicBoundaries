@@ -1,12 +1,15 @@
 package com.onaple.epicboundaries.commands;
 
+import com.onaple.epicboundaries.WorldAction;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 
 import java.util.Optional;
@@ -35,13 +38,28 @@ public class CreateInstanceCommand implements CommandExecutor {
             return CommandResult.empty();
         }
 
+        Optional<Player> playerOpt = args.getOne("player");
+        Player player = null;
+        if (!playerOpt.isPresent()) {
+            if (src instanceof Player) {
+                player = (Player) src;
+            } else {
+                src.sendMessage(Text.of("There must be a player target."));
+                return CommandResult.empty();
+            }
+        } else {
+            player = playerOpt.get();
+        }
+
         Optional<WorldProperties> worldProperties = Sponge.getServer().getWorldProperties(worldName);
         if (!worldProperties.isPresent()) {
             src.sendMessage(Text.of("The world " + worldName + " was not found and can therefore not be copied."));
             return CommandResult.empty();
         }
 
-        CompletableFuture<Optional<WorldProperties>> futureCopiedWorld = Sponge.getServer().copyWorld(worldProperties.get(), worldName + "-" + suffixOpt.get());
-        return CommandResult.empty();
+        String newWorldName = worldName + "-" + suffixOpt.get();
+        WorldAction.copyWorldAndTransferPlayer(player, worldProperties.get(), newWorldName);
+
+        return CommandResult.success();
     }
 }
