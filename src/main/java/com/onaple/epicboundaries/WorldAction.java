@@ -7,6 +7,7 @@ import org.spongepowered.api.world.storage.WorldProperties;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 public class WorldAction {
     /**
@@ -33,9 +34,8 @@ public class WorldAction {
                 EpicBoundaries.getLogger().info("This triggers");
                 Optional<World> worldOpt = Sponge.getServer().loadWorld(propertiesOpt.get());
                 EpicBoundaries.getLogger().info("This doesn't trigger !");
-                worldOpt.map(world -> {
+                worldOpt.ifPresent(world -> {
                     WorldAction.transferPlayerToWorld(immutablePlayer, world);
-                    return Optional.empty();
                 });
             }
         });

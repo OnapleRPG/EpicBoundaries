@@ -14,7 +14,6 @@ import java.sql.SQLException;
 
 @Singleton
 public class DatabaseHandler {
-    public DatabaseHandler() {}
     private String JDBC_URL = "jdbc:sqlite:./epicboundaries.db";
     private SqlService sqlService;
     public DataSource getDatasource() throws SQLException, ServiceUnavailableException {
@@ -33,9 +32,9 @@ public class DatabaseHandler {
             statement.execute();
             statement.close();
         } catch (ServiceUnavailableException e) {
-            EpicBoundaries.getLogger().error("Error while connecting to database : " + e.getMessage());
+            EpicBoundaries.getLogger().error("Error while connecting to database : ".concat(e.getMessage()));
         } catch (SQLException e) {
-            EpicBoundaries.getLogger().error("Error while creating respawning dialog table : " + e.getMessage());
+            EpicBoundaries.getLogger().error("Error while creating respawning dialog table : ".concat(e.getMessage()));
         } finally {
             closeConnection(connection, statement, null);
         }
@@ -51,21 +50,21 @@ public class DatabaseHandler {
             try {
                 resultSet.close();
             } catch (SQLException e) {
-                EpicBoundaries.getLogger().error("Error while closing result set : " + e.getMessage());
+                EpicBoundaries.getLogger().error("Error while closing result set : ".concat(e.getMessage()));
             }
         }
         if (statement != null) {
             try {
                 statement.close();
             } catch (SQLException e) {
-                EpicBoundaries.getLogger().error("Error while closing statement : " + e.getMessage());
+                EpicBoundaries.getLogger().error("Error while closing statement : ".concat(e.getMessage()));
             }
         }
         if (connection != null) {
             try {
                 connection.close();
             } catch (SQLException e) {
-                EpicBoundaries.getLogger().error("Error while closing connection : " + e.getMessage());
+                EpicBoundaries.getLogger().error("Error while closing connection : ".concat(e.getMessage()));
             }
         }
     }
