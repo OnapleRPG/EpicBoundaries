@@ -56,7 +56,9 @@ public class CreateInstanceCommand implements CommandExecutor {
         }
 
         String newWorldName = worldName + "-" + suffixOpt.get();
-        WorldAction.copyWorldAndTransferPlayer(player, worldProperties.get(), newWorldName);
+        WorldAction worldAction = new WorldAction();
+        worldAction.copyWorld(worldProperties.get(), newWorldName);
+        worldAction.addPlayerToTransferQueue(player.getName(), newWorldName);
 
         return CommandResult.success();
     }

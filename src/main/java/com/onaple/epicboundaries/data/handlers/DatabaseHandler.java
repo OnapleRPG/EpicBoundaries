@@ -34,7 +34,7 @@ public class DatabaseHandler {
         } catch (ServiceUnavailableException e) {
             EpicBoundaries.getLogger().error("Error while connecting to database : ".concat(e.getMessage()));
         } catch (SQLException e) {
-            EpicBoundaries.getLogger().error("Error while creating respawning dialog table : ".concat(e.getMessage()));
+            EpicBoundaries.getLogger().error("Error while executing statement on database : ".concat(e.getMessage()));
         } finally {
             closeConnection(connection, statement, null);
         }

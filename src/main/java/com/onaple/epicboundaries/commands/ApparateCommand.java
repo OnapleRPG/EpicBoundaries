@@ -45,7 +45,8 @@ public class ApparateCommand implements CommandExecutor {
         }
         World world = worldOpt.get();
 
-        WorldAction.transferPlayerToWorld(player, world);
+        WorldAction worldAction = new WorldAction();
+        worldAction.transferPlayerToWorld(player, world);
         return CommandResult.success();
     }
 }
