@@ -5,12 +5,15 @@ import com.onaple.epicboundaries.commands.ApparateCommand;
 import com.onaple.epicboundaries.commands.CreateInstanceCommand;
 import com.onaple.epicboundaries.data.access.InstanceDao;
 import com.onaple.epicboundaries.event.CopyWorldEvent;
+import com.onaple.epicboundaries.service.IInstanceService;
+import com.onaple.epicboundaries.service.InstanceService;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
+import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.scheduler.Task;
@@ -79,6 +82,11 @@ public class EpicBoundaries {
                 .name("Task deleting deprecated instances.").submit(this);
 
         logger.info("EPICBOUNDARIES initialized.");
+    }
+
+    @Listener
+    public void onGamePreInitialization(GamePreInitializationEvent event) {
+        Sponge.getServiceManager().setProvider(this, IInstanceService.class, new InstanceService());
     }
 
     /**
