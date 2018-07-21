@@ -3,6 +3,7 @@ package com.onaple.epicboundaries;
 
 import com.onaple.epicboundaries.commands.ApparateCommand;
 import com.onaple.epicboundaries.commands.CreateInstanceCommand;
+import com.onaple.epicboundaries.data.access.InstanceDao;
 import com.onaple.epicboundaries.event.CopyWorldEvent;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
@@ -12,10 +13,12 @@ import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
+import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.World;
 
 import javax.inject.Inject;
+import java.util.concurrent.TimeUnit;
 
 
 @Plugin(id = "epicboundaries", name = "EpicBoundaries", version = "0.1")
@@ -38,8 +41,19 @@ public class EpicBoundaries {
         return pluginContainer;
     }
 
+    private static InstanceDao instanceDao;
+    @Inject
+    public void setInstanceDao(InstanceDao instanceDao) {
+        EpicBoundaries.instanceDao = instanceDao;
+    }
+    public static InstanceDao getInstanceDao() {
+        return instanceDao;
+    }
+
     @Listener
     public void onServerStart(GameInitializationEvent event) {
+        instanceDao.createTableIfNotExist();
+
         CommandSpec apparateSpec = CommandSpec.builder()
                 .description(Text.of("Apparate player to another world"))
                 .permission("epicboundaries.command.apparate")
@@ -58,6 +72,11 @@ public class EpicBoundaries {
 
         Sponge.getCommandManager().register(this, apparateSpec, "apparate");
         Sponge.getCommandManager().register(this, copyWorldSpec, "create-instance");
+
+        WorldAction worldAction = new WorldAction();
+        Task.builder().execute(() -> worldAction.removeDeprecatedInstances())
+                .delay(5, TimeUnit.SECONDS).interval(60, TimeUnit.SECONDS)
+                .name("Task deleting deprecated instances.").submit(this);
 
         logger.info("EPICBOUNDARIES initialized.");
     }

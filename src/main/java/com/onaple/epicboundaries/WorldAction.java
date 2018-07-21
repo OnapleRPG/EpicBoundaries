@@ -1,20 +1,21 @@
 package com.onaple.epicboundaries;
 
+import com.onaple.epicboundaries.data.beans.InstanceBean;
 import com.onaple.epicboundaries.event.CopyWorldEvent;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.EventContext;
+import org.spongepowered.api.scheduler.SpongeExecutorService;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.sql.Timestamp;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class WorldAction {
-    static Map<String, String> playersToTransfer = new HashMap<>();
+    private static Map<String, String> playersToTransfer = new HashMap<>();
 
     /**
      * Transfer the player into a world
@@ -22,7 +23,9 @@ public class WorldAction {
      * @param world World to which transfer the player
      */
     public void transferPlayerToWorld(Player player, World world) {
+        EpicBoundaries.getInstanceDao().updateInstancePlayerCount(player.getWorld().getName(), -1);
         player.transferToWorld(world, world.getSpawnLocation().getPosition());
+        EpicBoundaries.getInstanceDao().updateInstancePlayerCount(world.getName(), 1);
     }
 
     /**
@@ -32,13 +35,9 @@ public class WorldAction {
     public void consumePlayerTransferQueue(String worldName) {
         for (Map.Entry<String, String> entry : playersToTransfer.entrySet()) {
             if (entry.getValue().equals(worldName)) {
-                EpicBoundaries.getLogger().info("world name matches");
                 Sponge.getServer().loadWorld(worldName).ifPresent(world -> {
-                    EpicBoundaries.getLogger().info("world loaded !");
                     Sponge.getServer().getPlayer(entry.getKey()).ifPresent(player -> {
-                        EpicBoundaries.getLogger().info("player retrieved !");
                         transferPlayerToWorld(player, world);
-                        EpicBoundaries.getLogger().info("player transfered !");
                     });
                 });
                 playersToTransfer.remove(entry.getKey());
@@ -53,15 +52,28 @@ public class WorldAction {
      */
     public void copyWorld(WorldProperties worldProperties, String newWorldName) {
         EpicBoundaries.getLogger().info("Creating duplicate world ".concat(newWorldName).concat("..."));
+        SpongeExecutorService minecraftExecutor = Sponge.getScheduler().createSyncExecutor(EpicBoundaries.getPluginContainer());
         CompletableFuture<Optional<WorldProperties>> futureCopiedWorld = Sponge.getServer().copyWorld(worldProperties, newWorldName);
         futureCopiedWorld.thenAcceptAsync(propertiesOpt -> {
             propertiesOpt.ifPresent(properties -> {
+                registerInstance(properties.getWorldName());
                 EventContext context = EventContext.builder().build();
                 Cause cause = Cause.builder().append(EpicBoundaries.getPluginContainer()).build(context);
                 CopyWorldEvent copyEvent = new CopyWorldEvent(cause, properties);
                 Sponge.getEventManager().post(copyEvent);
             });
-        });
+        }, minecraftExecutor);
+    }
+
+    /**
+     * Register an instance for a world
+     * @param worldName Name of the new instance/world
+     */
+    private void registerInstance(String worldName) {
+        Timestamp currentTimestamp = new Timestamp(Calendar.getInstance().getTime().getTime());
+        long time = currentTimestamp.getTime()/1000;
+        InstanceBean newInstance = new InstanceBean(worldName, 0, (int)time);
+        EpicBoundaries.getInstanceDao().addInstance(newInstance);
     }
 
     /**
@@ -71,5 +83,41 @@ public class WorldAction {
      */
     public void addPlayerToTransferQueue(String playerName, String worldName) {
         playersToTransfer.put(playerName, worldName);
+    }
+
+    /**
+     * Remove all instances considered as deprecated
+     */
+    public void removeDeprecatedInstances() {
+        List<InstanceBean> instances = EpicBoundaries.getInstanceDao().getDeprecatedInstances();
+        for (InstanceBean instance : instances) {
+            String worldName = instance.getWorldName();
+            if (!Sponge.getServer().getDefaultWorldName().equals(worldName)) {
+                deleteWorld(worldName);
+            }
+        }
+        EpicBoundaries.getInstanceDao().removeInstances(instances);
+    }
+
+    /**
+     * Delete a given world
+     * @param worldName World name
+     */
+    private void deleteWorld(String worldName) {
+        SpongeExecutorService minecraftExecutor = Sponge.getScheduler().createSyncExecutor(EpicBoundaries.getPluginContainer());
+        Sponge.getServer().getWorld(worldName).ifPresent(world -> {
+            if (!world.getPlayers().isEmpty()) {
+                EpicBoundaries.getLogger().warn("Attempting to unload and delete a non empty world !");
+                return;
+            }
+            Sponge.getServer().unloadWorld(world);
+        });
+        EpicBoundaries.getLogger().info("Deleting world ".concat(worldName).concat("..."));
+        Sponge.getServer().getWorldProperties(worldName).ifPresent(properties -> {
+            CompletableFuture<Boolean> worldDeletion = Sponge.getServer().deleteWorld(properties);
+            worldDeletion.thenAcceptAsync(deletion -> {
+
+            }, minecraftExecutor);
+        });
     }
 }

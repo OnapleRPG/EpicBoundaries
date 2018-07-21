@@ -16,7 +16,7 @@ public class InstanceBean {
     /**
      * Timestamp of the last player exit (used to delete the instance after a while)
      */
-    private int lastExit;
+    private long lastExit;
 
     public int getId() {
         return id;
@@ -42,11 +42,24 @@ public class InstanceBean {
         this.playerCount = playerCount;
     }
 
-    public int getLastExit() {
+    public long getLastExit() {
         return lastExit;
     }
 
-    public void setLastExit(int lastExit) {
+    public void setLastExit(long lastExit) {
+        this.lastExit = lastExit;
+    }
+
+    public InstanceBean(int id, String worldName, int playerCount, long lastExit) {
+        this.id = id;
+        this.worldName = worldName;
+        this.playerCount = playerCount;
+        this.lastExit = lastExit;
+    }
+
+    public InstanceBean(String worldName, int playerCount, long lastExit) {
+        this.worldName = worldName;
+        this.playerCount = playerCount;
         this.lastExit = lastExit;
     }
 }
