@@ -1,5 +1,7 @@
 package com.onaple.epicboundaries.commands;
 
+import com.flowpowered.math.vector.Vector3d;
+import com.onaple.epicboundaries.EpicBoundaries;
 import com.onaple.epicboundaries.WorldAction;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
@@ -30,11 +32,12 @@ public class CreateInstanceCommand implements CommandExecutor {
         }
         String worldName = worldNameOpt.get();
 
-        Optional<String> suffixOpt = args.<String>getOne("suffix");
-        if (!suffixOpt.isPresent() || suffixOpt.get().equals("")) {
-            src.sendMessage(Text.of("A name suffix must be specified."));
+        Optional<Vector3d> positionOpt = args.<Vector3d>getOne("position");
+        if (!positionOpt.isPresent()) {
+            src.sendMessage(Text.of("A position must be specified."));
             return CommandResult.empty();
         }
+        Vector3d position = positionOpt.get();
 
         Optional<Player> playerOpt = args.getOne("player");
         Player player = null;
@@ -55,10 +58,13 @@ public class CreateInstanceCommand implements CommandExecutor {
             return CommandResult.empty();
         }
 
-        String newWorldName = worldName + "-" + suffixOpt.get();
+        String newWorldName;
+        do {
+            newWorldName = java.util.UUID.randomUUID().toString();
+        } while (Sponge.getServer().getWorldProperties(newWorldName).isPresent());
         WorldAction worldAction = new WorldAction();
         worldAction.copyWorld(worldProperties.get(), newWorldName);
-        worldAction.addPlayerToTransferQueue(player.getName(), newWorldName);
+        worldAction.addPlayerToTransferQueue(player.getName(), newWorldName, position);
 
         return CommandResult.success();
     }

@@ -82,7 +82,7 @@ public class InstanceDao {
      * @return List of deprecated Instances
      */
     public List<InstanceBean> getDeprecatedInstances() {
-        String query = "SELECT id, worldname, playercount, lastexit FROM instance WHERE playercount <= 0 AND strftime('%s', 'now') > lastexit + 2*60";
+        String query = "SELECT id, worldname, playercount, lastexit FROM instance WHERE playercount <= 0 AND strftime('%s', 'now') > lastexit";
         List<InstanceBean> deprecatedInstances = new ArrayList<>();
         Connection connection = null;
         PreparedStatement statement = null;

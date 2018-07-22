@@ -61,6 +61,7 @@ public class EpicBoundaries {
                 .description(Text.of("Apparate player to another world"))
                 .permission("epicboundaries.command.apparate")
                 .arguments(GenericArguments.onlyOne(GenericArguments.string(Text.of("world"))),
+                        GenericArguments.onlyOne(GenericArguments.vector3d(Text.of("position"))),
                         GenericArguments.optional(GenericArguments.player(Text.of("player"))))
                 .executor(new ApparateCommand())
                 .build();
@@ -68,7 +69,7 @@ public class EpicBoundaries {
                 .description(Text.of("Create an instance from an existing world"))
                 .permission("epicboundaries.command.createinstance")
                 .arguments(GenericArguments.onlyOne(GenericArguments.string(Text.of("world"))),
-                        GenericArguments.onlyOne(GenericArguments.string(Text.of("suffix"))),
+                        GenericArguments.onlyOne(GenericArguments.vector3d(Text.of("position"))),
                         GenericArguments.optional(GenericArguments.player(Text.of("player"))))
                 .executor(new CreateInstanceCommand())
                 .build();

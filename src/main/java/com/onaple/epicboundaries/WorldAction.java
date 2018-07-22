@@ -1,12 +1,15 @@
 package com.onaple.epicboundaries;
 
+import com.flowpowered.math.vector.Vector3d;
 import com.onaple.epicboundaries.data.beans.InstanceBean;
 import com.onaple.epicboundaries.event.CopyWorldEvent;
+import javafx.util.Pair;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.EventContext;
 import org.spongepowered.api.scheduler.SpongeExecutorService;
+import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 
@@ -15,17 +18,17 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class WorldAction {
-    private static Map<String, String> playersToTransfer = new HashMap<>();
+    private static Map<String, Pair<String, Vector3d>> playersToTransfer = new HashMap<>();
 
     /**
      * Transfer the player into a world
      * @param player Player to transfer
-     * @param world World to which transfer the player
+     * @param location Location and world to which transfer the player
      */
-    public void transferPlayerToWorld(Player player, World world) {
+    public void transferPlayerToWorld(Player player, Location<World> location) {
         EpicBoundaries.getInstanceDao().updateInstancePlayerCount(player.getWorld().getName(), -1);
-        player.transferToWorld(world, world.getSpawnLocation().getPosition());
-        EpicBoundaries.getInstanceDao().updateInstancePlayerCount(world.getName(), 1);
+        player.transferToWorld(location.getExtent(), location.getPosition());
+        EpicBoundaries.getInstanceDao().updateInstancePlayerCount(location.getExtent().getName(), 1);
     }
 
     /**
@@ -33,11 +36,13 @@ public class WorldAction {
      * @param worldName Name of the world to transfer player(s) to
      */
     public void consumePlayerTransferQueue(String worldName) {
-        for (Map.Entry<String, String> entry : playersToTransfer.entrySet()) {
-            if (entry.getValue().equals(worldName)) {
+        for (Map.Entry<String, Pair<String, Vector3d>> entry : playersToTransfer.entrySet()) {
+            Pair<String, Vector3d> locationPair = entry.getValue();
+            if (locationPair.getKey().equals(worldName)) {
                 Sponge.getServer().loadWorld(worldName).ifPresent(world -> {
+                    Location<World> location = world.getLocation(locationPair.getValue());
                     Sponge.getServer().getPlayer(entry.getKey()).ifPresent(player -> {
-                        transferPlayerToWorld(player, world);
+                        transferPlayerToWorld(player, location);
                     });
                 });
                 playersToTransfer.remove(entry.getKey());
@@ -80,9 +85,10 @@ public class WorldAction {
      * Add a player and a world name to the transfer queue so the player can be transfered after copy is finished
      * @param playerName Name of the player waiting for transfer
      * @param worldName Name of the world to transfer the player to
+     * @param position Position to teleport the player to
      */
-    public void addPlayerToTransferQueue(String playerName, String worldName) {
-        playersToTransfer.put(playerName, worldName);
+    public void addPlayerToTransferQueue(String playerName, String worldName, Vector3d position) {
+        playersToTransfer.put(playerName, new Pair<>(worldName, position));
     }
 
     /**
