@@ -9,9 +9,18 @@ import com.onaple.epicboundaries.service.IInstanceService;
 import com.onaple.epicboundaries.service.InstanceService;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.block.trait.BlockTrait;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.data.Transaction;
+import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.block.ChangeBlockEvent;
+import org.spongepowered.api.event.block.InteractBlockEvent;
+import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.plugin.Plugin;
@@ -21,6 +30,7 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.World;
 
 import javax.inject.Inject;
+import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 
@@ -99,5 +109,19 @@ public class EpicBoundaries {
         String worldName = event.getWorldProperties().getWorldName();
         WorldAction worldAction = new WorldAction();
         worldAction.consumePlayerTransferQueue(worldName);
+    }
+
+    /**
+     * Cancel every modify block events that "open" something
+     * @param event Modify event
+     */
+    @Listener
+    public void onModifyBlock(ChangeBlockEvent.Modify event, @First Player player) {
+        if (!player.gameMode().equals(GameModes.CREATIVE)) {
+            for (Transaction<BlockSnapshot> transaction : event.getTransactions()) {
+                BlockSnapshot snapshot = transaction.getOriginal();
+                snapshot.getState().getTrait("open").ifPresent(openProperty -> event.setCancelled(true));
+            }
+        }
     }
 }
