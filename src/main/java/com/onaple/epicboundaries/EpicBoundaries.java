@@ -10,7 +10,10 @@ import com.onaple.epicboundaries.service.InstanceService;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.block.BlockState;
+import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.trait.BlockTrait;
+import org.spongepowered.api.block.trait.BooleanTraits;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.data.Transaction;
@@ -120,7 +123,12 @@ public class EpicBoundaries {
         if (!player.gameMode().equals(GameModes.CREATIVE)) {
             for (Transaction<BlockSnapshot> transaction : event.getTransactions()) {
                 BlockSnapshot snapshot = transaction.getOriginal();
-                snapshot.getState().getTrait("open").ifPresent(openProperty -> event.setCancelled(true));
+                snapshot.getState().getTrait("open").ifPresent(openProperty -> {
+                    snapshot.getState().with(Keys.OPEN, true).ifPresent(blockState -> {
+                        event.setCancelled(true);
+                        player.sendBlockChange(snapshot.getPosition(), blockState);
+                    });
+                });
             }
         }
     }
