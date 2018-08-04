@@ -3,7 +3,6 @@ package com.onaple.epicboundaries;
 import com.flowpowered.math.vector.Vector3d;
 import com.onaple.epicboundaries.data.beans.InstanceBean;
 import com.onaple.epicboundaries.event.CopyWorldEvent;
-import javafx.util.Pair;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.cause.Cause;
@@ -99,7 +98,7 @@ public class WorldAction {
         for (InstanceBean instance : instances) {
             String worldName = instance.getWorldName();
             if (!Sponge.getServer().getDefaultWorldName().equals(worldName)) {
-                deleteWorld(worldName);
+                deleteInstanceWorld(worldName);
             }
         }
         EpicBoundaries.getInstanceDao().removeInstances(instances);
@@ -109,7 +108,11 @@ public class WorldAction {
      * Delete a given world
      * @param worldName World name
      */
-    private void deleteWorld(String worldName) {
+    private void deleteInstanceWorld(String worldName) {
+        if (worldName.length() != java.util.UUID.randomUUID().toString().length()) {
+            EpicBoundaries.getLogger().warn("Plugin can only delete instance issued worlds !");
+            return;
+        }
         SpongeExecutorService minecraftExecutor = Sponge.getScheduler().createSyncExecutor(EpicBoundaries.getPluginContainer());
         Sponge.getServer().getWorld(worldName).ifPresent(world -> {
             if (!world.getPlayers().isEmpty()) {
