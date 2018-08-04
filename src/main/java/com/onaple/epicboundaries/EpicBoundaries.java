@@ -118,7 +118,7 @@ public class EpicBoundaries {
      * Cancel every modify block events that "open" something
      * @param event Modify event
      */
-    @Listener
+    /*@Listener
     public void onModifyBlock(ChangeBlockEvent.Modify event, @First Player player) {
         if (!player.gameMode().equals(GameModes.CREATIVE)) {
             for (Transaction<BlockSnapshot> transaction : event.getTransactions()) {
@@ -131,5 +131,5 @@ public class EpicBoundaries {
                 });
             }
         }
-    }
+    }*/
 }
