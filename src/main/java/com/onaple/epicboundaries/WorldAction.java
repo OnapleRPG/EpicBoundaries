@@ -31,6 +31,19 @@ public class WorldAction {
     }
 
     /**
+     * Transfer the players into a world
+     * @param players Players to transfer
+     * @param location Location and world to which transfer the players
+     */
+    public void transferPlayersToWorld(List<Player> players, Location<World> location) {
+        players.forEach(player -> {
+            EpicBoundaries.getInstanceDao().updateInstancePlayerCount(player.getWorld().getName(), -1);
+            player.transferToWorld(location.getExtent(), location.getPosition());
+            EpicBoundaries.getInstanceDao().updateInstancePlayerCount(location.getExtent().getName(), 1);
+        });
+    }
+
+    /**
      * Try to consume the player transfer queue to transfer players to a given world
      * @param worldName Name of the world to transfer player(s) to
      */

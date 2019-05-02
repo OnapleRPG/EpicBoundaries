@@ -2,7 +2,9 @@ package com.onaple.epicboundaries;
 
 
 import com.onaple.epicboundaries.commands.ApparateCommand;
+import com.onaple.epicboundaries.commands.ApparateGroupCommand;
 import com.onaple.epicboundaries.commands.CreateInstanceCommand;
+import com.onaple.epicboundaries.commands.CreateInstanceForGroupCommand;
 import com.onaple.epicboundaries.data.access.InstanceDao;
 import com.onaple.epicboundaries.event.CopyWorldEvent;
 import com.onaple.epicboundaries.service.IInstanceService;
@@ -78,20 +80,38 @@ public class EpicBoundaries {
                         GenericArguments.optional(GenericArguments.player(Text.of("player"))))
                 .executor(new ApparateCommand())
                 .build();
+        CommandSpec apparateGroupSpec = CommandSpec.builder()
+                .description(Text.of("Apparate player's group to another world"))
+                .permission("epicboundaries.command.apparategroup")
+                .arguments(GenericArguments.onlyOne(GenericArguments.string(Text.of("world"))),
+                        GenericArguments.onlyOne(GenericArguments.vector3d(Text.of("position"))),
+                        GenericArguments.optional(GenericArguments.player(Text.of("player"))))
+                .executor(new ApparateGroupCommand())
+                .build();
         CommandSpec copyWorldSpec = CommandSpec.builder()
-                .description(Text.of("Create an instance from an existing world"))
+                .description(Text.of("Create an instance from an existing world for a player"))
                 .permission("epicboundaries.command.createinstance")
                 .arguments(GenericArguments.onlyOne(GenericArguments.string(Text.of("world"))),
                         GenericArguments.onlyOne(GenericArguments.vector3d(Text.of("position"))),
                         GenericArguments.optional(GenericArguments.player(Text.of("player"))))
                 .executor(new CreateInstanceCommand())
                 .build();
+        CommandSpec copyWorldForGroupSpec = CommandSpec.builder()
+                .description(Text.of("Create an instance from an existing world for a group"))
+                .permission("epicboundaries.command.createinstanceforgroup")
+                .arguments(GenericArguments.onlyOne(GenericArguments.string(Text.of("world"))),
+                        GenericArguments.onlyOne(GenericArguments.vector3d(Text.of("position"))),
+                        GenericArguments.optional(GenericArguments.player(Text.of("player"))))
+                .executor(new CreateInstanceForGroupCommand())
+                .build();
 
         Sponge.getCommandManager().register(this, apparateSpec, "apparate");
+        Sponge.getCommandManager().register(this, apparateGroupSpec, "apparate-group");
         Sponge.getCommandManager().register(this, copyWorldSpec, "create-instance");
+        Sponge.getCommandManager().register(this, copyWorldForGroupSpec, "create-instance-for-group");
 
         WorldAction worldAction = new WorldAction();
-        Task.builder().execute(() -> worldAction.removeDeprecatedInstances())
+        Task.builder().execute(worldAction::removeDeprecatedInstances)
                 .delay(5, TimeUnit.SECONDS).interval(60, TimeUnit.SECONDS)
                 .name("Task deleting deprecated instances.").submit(this);
 
