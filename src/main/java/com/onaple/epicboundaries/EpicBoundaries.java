@@ -16,6 +16,7 @@ import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
+import org.spongepowered.api.plugin.Dependency;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.scheduler.Task;
@@ -25,7 +26,10 @@ import javax.inject.Inject;
 import java.util.concurrent.TimeUnit;
 
 
-@Plugin(id = "epicboundaries", name = "EpicBoundaries", version = "0.2")
+@Plugin(id = "epicboundaries", name = "EpicBoundaries", version = "0.2",
+        description = "Plugin managing world instances",
+        authors = {"zessirb", "Selki"},
+        dependencies = {@Dependency(id = "crowdbinding", optional = true)})
 public class EpicBoundaries {
     private static Logger logger;
     @Inject
