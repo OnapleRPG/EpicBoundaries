@@ -104,6 +104,17 @@ public class WorldAction {
     }
 
     /**
+     * Add players and a world name to the transfer queue so the player can be transfered after copy is finished
+     * @param players Players to transfers
+     * @param worldName Name of the world to transfer the player to
+     * @param position Position to teleport the player to
+     */
+    public void addPlayersToTransferQueue(List<Player> players, String worldName, Vector3d position) {
+        players.forEach(p -> playersToTransfer.put(p.getName(), new AbstractMap.SimpleEntry<>(worldName, position)));
+
+    }
+
+    /**
      * Remove all instances considered as deprecated
      */
     public void removeDeprecatedInstances() {

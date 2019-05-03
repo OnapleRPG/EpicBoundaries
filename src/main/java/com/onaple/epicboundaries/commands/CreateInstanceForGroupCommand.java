@@ -86,7 +86,7 @@ public class CreateInstanceForGroupCommand implements CommandExecutor {
         } while (Sponge.getServer().getWorldProperties(newWorldName).isPresent());
         WorldAction worldAction = new WorldAction();
         worldAction.copyWorld(worldProperties.get(), newWorldName);
-        worldAction.addPlayerToTransferQueue(player.getName(), newWorldName, position);
+        worldAction.addPlayersToTransferQueue(players, newWorldName, position);
 
         return CommandResult.success();
     }
