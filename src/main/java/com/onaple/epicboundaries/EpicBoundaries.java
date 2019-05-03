@@ -25,7 +25,7 @@ import javax.inject.Inject;
 import java.util.concurrent.TimeUnit;
 
 
-@Plugin(id = "epicboundaries", name = "EpicBoundaries", version = "0.1")
+@Plugin(id = "epicboundaries", name = "EpicBoundaries", version = "0.2")
 public class EpicBoundaries {
     private static Logger logger;
     @Inject
