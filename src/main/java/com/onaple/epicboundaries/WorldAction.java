@@ -17,7 +17,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class WorldAction {
-    private static Map<String, Map.Entry<String, Vector3d>> playersToTransfer = new HashMap<>();
+    private static Map<String, AbstractMap.SimpleEntry<String, Vector3d>> playersToTransfer = new HashMap<>();
 
     /**
      * Transfer the player into a world
@@ -48,7 +48,7 @@ public class WorldAction {
      * @param worldName Name of the world to transfer player(s) to
      */
     public void consumePlayerTransferQueue(String worldName) {
-        for (Map.Entry<String, Map.Entry<String, Vector3d>> entry : playersToTransfer.entrySet()) {
+        for (Map.Entry<String, AbstractMap.SimpleEntry<String, Vector3d>> entry : playersToTransfer.entrySet()) {
             Map.Entry<String, Vector3d> locationPair = entry.getValue();
             if (locationPair.getKey().equals(worldName)) {
                 Sponge.getServer().loadWorld(worldName).ifPresent(world -> {
