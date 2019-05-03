@@ -2,6 +2,7 @@ package com.onaple.epicboundaries;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.onaple.epicboundaries.data.beans.InstanceBean;
+import com.onaple.epicboundaries.data.beans.WorldTeleportationDataBean;
 import com.onaple.epicboundaries.event.CopyWorldEvent;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
@@ -15,9 +16,10 @@ import org.spongepowered.api.world.storage.WorldProperties;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 public class WorldAction {
-    private static Map<String, AbstractMap.SimpleEntry<String, Vector3d>> playersToTransfer = new HashMap<>();
+    private static List<WorldTeleportationDataBean> pendingTeleportations = new ArrayList<>();
 
     /**
      * Transfer the player into a world
@@ -48,18 +50,17 @@ public class WorldAction {
      * @param worldName Name of the world to transfer player(s) to
      */
     public void consumePlayerTransferQueue(String worldName) {
-        for (Map.Entry<String, AbstractMap.SimpleEntry<String, Vector3d>> entry : playersToTransfer.entrySet()) {
-            Map.Entry<String, Vector3d> locationPair = entry.getValue();
-            if (locationPair.getKey().equals(worldName)) {
+        for (WorldTeleportationDataBean teleportationData : pendingTeleportations) {
+            if (teleportationData.getWorldName().equals(worldName)) {
                 Sponge.getServer().loadWorld(worldName).ifPresent(world -> {
-                    Location<World> location = world.getLocation(locationPair.getValue());
-                    Sponge.getServer().getPlayer(entry.getKey()).ifPresent(player -> {
+                    Location<World> location = world.getLocation(teleportationData.getPosition());
+                    Sponge.getServer().getPlayer(teleportationData.getPlayerName()).ifPresent(player -> {
                         transferPlayerToWorld(player, location);
                     });
                 });
-                playersToTransfer.remove(entry.getKey());
             }
         }
+        pendingTeleportations.removeAll(pendingTeleportations.stream().filter(t -> t.getWorldName().equals(worldName)).collect(Collectors.toList()));
     }
 
     /**
@@ -100,7 +101,7 @@ public class WorldAction {
      * @param position Position to teleport the player to
      */
     public void addPlayerToTransferQueue(String playerName, String worldName, Vector3d position) {
-        playersToTransfer.put(playerName, new AbstractMap.SimpleEntry<>(worldName, position));
+        pendingTeleportations.add(new WorldTeleportationDataBean(position, worldName, playerName));
     }
 
     /**
@@ -110,7 +111,7 @@ public class WorldAction {
      * @param position Position to teleport the player to
      */
     public void addPlayersToTransferQueue(List<Player> players, String worldName, Vector3d position) {
-        players.forEach(p -> playersToTransfer.put(p.getName(), new AbstractMap.SimpleEntry<>(worldName, position)));
+        players.forEach(p -> pendingTeleportations.add(new WorldTeleportationDataBean(position, worldName, p.getName())));
 
     }
 
