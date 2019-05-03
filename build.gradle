@@ -68,7 +68,7 @@ dependencies {
     compile 'org.xerial:sqlite-jdbc:3.7.2'
     testCompile "junit:junit:4.11"
     testCompile 'org.spongepowered:mctester:0.10.5-SNAPSHOT'
-    implementation 'com.github.OnapleRPG:CrowdBinding:v0.4.1'
+    implementation 'com.github.OnapleRPG:CrowdBinding:v0.4.2'
 }
 
 sonarqube {
