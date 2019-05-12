@@ -15,7 +15,7 @@ import org.spongepowered.api.world.storage.WorldProperties;
 
 import java.util.Optional;
 
-public class CreateInstanceCommand implements CommandExecutor {
+public class CreateInstanceCommand extends CommandAbstract implements CommandExecutor {
     /**
      * Copy world with given name with given suffix
      * @param src Origin of the command
@@ -39,32 +39,11 @@ public class CreateInstanceCommand implements CommandExecutor {
         }
         Vector3d position = positionOpt.get();
 
-        Optional<Player> playerOpt = args.getOne("player");
-        Player player = null;
-        if (!playerOpt.isPresent()) {
-            if (src instanceof Player) {
-                player = (Player) src;
-            } else {
-                src.sendMessage(Text.of("There must be a player target."));
-                return CommandResult.empty();
-            }
-        } else {
-            player = playerOpt.get();
-        }
+        Player player = getPlayer(src,args);
 
-        Optional<WorldProperties> worldProperties = Sponge.getServer().getWorldProperties(worldName);
-        if (!worldProperties.isPresent()) {
-            src.sendMessage(Text.of("The world " + worldName + " was not found and can therefore not be copied."));
-            return CommandResult.empty();
-        }
+        String instanceName = newWolrdInstance(worldName);
 
-        String newWorldName;
-        do {
-            newWorldName = java.util.UUID.randomUUID().toString();
-        } while (Sponge.getServer().getWorldProperties(newWorldName).isPresent());
-        WorldAction worldAction = new WorldAction();
-        worldAction.copyWorld(worldProperties.get(), newWorldName);
-        worldAction.addPlayerToTransferQueue(player.getName(), newWorldName, position);
+        teleport(instanceName,position,player);
 
         return CommandResult.success();
     }

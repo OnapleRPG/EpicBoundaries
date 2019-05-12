@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 @Plugin(id = "epicboundaries", name = "EpicBoundaries", version = "0.2",
         description = "Plugin managing world instances",
         authors = {"zessirb", "Selki"},
-        dependencies = {@Dependency(id = "crowdbinding", optional = true)})
+        dependencies = {@Dependency(id = "crowdbinding", optional = true),@Dependency(id="nt-rpg", optional = true)})
 public class EpicBoundaries {
     private static Logger logger;
     @Inject

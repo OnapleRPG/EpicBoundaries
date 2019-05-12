@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class CreateInstanceForGroupCommand implements CommandExecutor {
+public class CreateInstanceForGroupCommand extends CommandAbstract implements CommandExecutor {
     /**
      * Copy world with given name with given suffix
      * @param src Origin of the command
@@ -41,52 +41,12 @@ public class CreateInstanceForGroupCommand implements CommandExecutor {
         }
         Vector3d position = positionOpt.get();
 
-        Optional<Player> playerOpt = args.getOne("player");
-        Player player = null;
-        if (!playerOpt.isPresent()) {
-            if (src instanceof Player) {
-                player = (Player) src;
-            } else {
-                src.sendMessage(Text.of("There must be a player target."));
-                return CommandResult.empty();
-            }
-        } else {
-            player = playerOpt.get();
-        }
+        Player player = getPlayer(src,args);
 
-        Optional<GroupService> optionalGroupService;
-        try {
-            optionalGroupService = Sponge.getServiceManager().provide(GroupService.class);
-            if (!optionalGroupService.isPresent()) {
-                src.sendMessage(Text.of("You need the plugin CrowdBinding to teleport a group."));
-                return CommandResult.empty();
-            }
-        } catch (NoClassDefFoundError e) {
-            src.sendMessage(Text.of("You need the plugin CrowdBinding to teleport a group."));
-            return CommandResult.empty();
-        }
-        GroupService groupService = optionalGroupService.get();
+        List<Player> players = getGroup(player);
 
-        List<Player> players = new ArrayList<>();
-        groupService.getGroupId(player).ifPresent(gid -> players.addAll(groupService.getMembers(gid)));
-        if (players.size() <= 1) {
-            src.sendMessage(Text.of("The player is not within a group."));
-            return CommandResult.empty();
-        }
-
-        Optional<WorldProperties> worldProperties = Sponge.getServer().getWorldProperties(worldName);
-        if (!worldProperties.isPresent()) {
-            src.sendMessage(Text.of("The world " + worldName + " was not found and can therefore not be copied."));
-            return CommandResult.empty();
-        }
-
-        String newWorldName;
-        do {
-            newWorldName = java.util.UUID.randomUUID().toString();
-        } while (Sponge.getServer().getWorldProperties(newWorldName).isPresent());
-        WorldAction worldAction = new WorldAction();
-        worldAction.copyWorld(worldProperties.get(), newWorldName);
-        worldAction.addPlayersToTransferQueue(players, newWorldName, position);
+        String newWorldName = newWolrdInstance(worldName);
+        teleport(newWorldName, position,players);
 
         return CommandResult.success();
     }
