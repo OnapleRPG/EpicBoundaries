@@ -64,7 +64,7 @@ class CommandAbstract {
             }
         } else if (Sponge.getPluginManager().isLoaded("nt-rpg")) {
             try {
-                EpicBoundaries.getLogger().info("nt-rpg loaded, check for group members [{}] ",
+                EpicBoundaries.getLogger().debug("nt-rpg loaded, check for group members [{}] ",
                         getGroupMember(player));
                 players.addAll(getGroupMember(player));
             } catch (NoClassDefFoundError e) {
