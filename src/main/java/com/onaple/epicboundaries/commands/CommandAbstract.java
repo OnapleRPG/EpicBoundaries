@@ -52,26 +52,35 @@ class CommandAbstract {
                 GroupService groupService = optionalGroupService.get();
                 groupService.getGroupId(player).ifPresent(gid -> players.addAll(groupService.getMembers(gid)));
 
-            } else if (Sponge.getPluginManager().isLoaded("nt-rpg")) {
-                EpicBoundaries.getLogger().info("nt-rpg loaded, check for group members [{}] ",
-                       getGroupMember(player));
-                players.addAll(getGroupMember(player));
-            } else {
-                throw new CommandException(Text.of("You need the plugin CrowdBinding or nt-rpg to teleport a group."));
             }
         } catch (NoClassDefFoundError e) {
-            throw new CommandException(Text.of("You need either the plugin CrowdBinding or nt-rpg to teleport a group."));
+            EpicBoundaries.getLogger().warn("error while get group members", e);
+          //  throw new CommandException(Text.of("You need either the plugin CrowdBinding to teleport a group."));
         }
+        try {
+            if (Sponge.getPluginManager().isLoaded("nt-rpg")) {
+                EpicBoundaries.getLogger().info("nt-rpg loaded, check for group members [{}] ",
+                        getGroupMember(player));
+                players.addAll(getGroupMember(player));
+            } else {
+                throw new CommandException(Text.of("You need the plugin nt-rpg to teleport a group."));
+            }
+        } catch (NoClassDefFoundError e) {
+            EpicBoundaries.getLogger().warn("error while get group members", e);
+          //  throw new CommandException(Text.of("You need either the plugin nt-rpg to teleport a group."));
+        }
+
         return players;
     }
 
     protected void teleport(String worldName, Vector3d position, Player player) throws CommandException {
-        Location<World> location = getLocation(worldName,position);
+        Location<World> location = getLocation(worldName, position);
         WorldAction worldAction = new WorldAction();
         worldAction.transferPlayerToWorld(player, location);
     }
+
     protected void teleport(String worldName, Vector3d position, List<Player> players) throws CommandException {
-        Location<World> location = getLocation(worldName,position);
+        Location<World> location = getLocation(worldName, position);
         WorldAction worldAction = new WorldAction();
         worldAction.transferPlayersToWorld(players, location);
     }
@@ -98,7 +107,8 @@ class CommandAbstract {
         worldAction.copyWorld(worldProperties.get(), newWorldName);
         return newWorldName;
     }
-    private List<Player> getGroupMember(Player player){
+
+    private List<Player> getGroupMember(Player player) {
         CharacterService characterService = IoC.get().build(CharacterService.class);
         IActiveCharacter activeCharacter = characterService.getCharacter(player.getUniqueId());
         Party party = activeCharacter.getParty();
