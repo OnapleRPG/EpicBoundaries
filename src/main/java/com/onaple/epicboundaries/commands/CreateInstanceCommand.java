@@ -1,7 +1,6 @@
 package com.onaple.epicboundaries.commands;
 
 import com.flowpowered.math.vector.Vector3d;
-import com.onaple.epicboundaries.EpicBoundaries;
 import com.onaple.epicboundaries.WorldAction;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
@@ -11,7 +10,6 @@ import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.world.storage.WorldProperties;
 
 import java.util.Optional;
 
@@ -41,9 +39,10 @@ public class CreateInstanceCommand extends CommandAbstract implements CommandExe
 
         Player player = getPlayer(src,args);
 
-        String instanceName = newWolrdInstance(worldName);
+        String instanceName = newWorldInstance(worldName);
 
-        teleport(instanceName,position,player);
+        WorldAction worldAction = new WorldAction();
+        worldAction.addPlayerToTransferQueue(player.getName(),instanceName,position);
 
         return CommandResult.success();
     }

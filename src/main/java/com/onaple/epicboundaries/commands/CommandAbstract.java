@@ -8,6 +8,7 @@ import cz.neumimto.core.ioc.IoC;
 import cz.neumimto.rpg.players.CharacterService;
 import cz.neumimto.rpg.players.IActiveCharacter;
 import cz.neumimto.rpg.players.parties.Party;
+import net.minecraft.command.server.CommandListPlayers;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -15,6 +16,8 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextStyle;
+import org.spongepowered.api.text.format.TextStyles;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import com.flowpowered.math.vector.Vector3d;
@@ -46,30 +49,33 @@ class CommandAbstract {
     protected List<Player> getGroup(Player player) throws CommandException {
         List<Player> players = new ArrayList<>();
         Optional<GroupService> optionalGroupService;
-        try {
-            optionalGroupService = Sponge.getServiceManager().provide(GroupService.class);
-            if (optionalGroupService.isPresent()) {
-                GroupService groupService = optionalGroupService.get();
-                groupService.getGroupId(player).ifPresent(gid -> players.addAll(groupService.getMembers(gid)));
+        if (Sponge.getPluginManager().isLoaded("crowdbinding")) {
+            try {
+                optionalGroupService = Sponge.getServiceManager().provide(GroupService.class);
+                if (optionalGroupService.isPresent()) {
+                    GroupService groupService = optionalGroupService.get();
+                    groupService.getGroupId(player).ifPresent(gid -> players.addAll(groupService.getMembers(gid)));
 
+                } else {
+                    EpicBoundaries.getLogger().warn("Could not get CrowdBinding GroupService class");
+                }
+            } catch (NoClassDefFoundError e) {
+                EpicBoundaries.getLogger().warn("Could not get CrowdBinding GroupService class");
             }
-        } catch (NoClassDefFoundError e) {
-            EpicBoundaries.getLogger().warn("error while get group members", e);
-          //  throw new CommandException(Text.of("You need either the plugin CrowdBinding to teleport a group."));
-        }
-        try {
-            if (Sponge.getPluginManager().isLoaded("nt-rpg")) {
+        } else if (Sponge.getPluginManager().isLoaded("nt-rpg")) {
+            try {
                 EpicBoundaries.getLogger().info("nt-rpg loaded, check for group members [{}] ",
                         getGroupMember(player));
                 players.addAll(getGroupMember(player));
-            } else {
-                throw new CommandException(Text.of("You need the plugin nt-rpg to teleport a group."));
-            }
-        } catch (NoClassDefFoundError e) {
-            EpicBoundaries.getLogger().warn("error while get group members", e);
-          //  throw new CommandException(Text.of("You need either the plugin nt-rpg to teleport a group."));
-        }
+            } catch (NoClassDefFoundError e) {
+                EpicBoundaries.getLogger().warn("Could not get NT-RPG CharacterService class");
 
+            }
+    } else {
+            throw new CommandException(Text.of("You need either ")
+                    .concat(Text.builder("CrowdBinding or NT-RPG").style(TextStyles.BOLD).build())
+                    .concat(Text.of(" use group teleportation")));
+        }
         return players;
     }
 
@@ -93,7 +99,7 @@ class CommandAbstract {
         return worldOpt.get().getLocation(position);
     }
 
-    protected String newWolrdInstance(String worldName) throws CommandException {
+    protected String newWorldInstance(String worldName) throws CommandException {
         Optional<WorldProperties> worldProperties = Sponge.getServer().getWorldProperties(worldName);
         if (!worldProperties.isPresent()) {
             throw new CommandException(Text.of("The world " + worldName + " was not found and can therefore not be copied."));

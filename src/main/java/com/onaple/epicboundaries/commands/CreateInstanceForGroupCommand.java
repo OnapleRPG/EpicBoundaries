@@ -1,7 +1,6 @@
 package com.onaple.epicboundaries.commands;
 
 import com.flowpowered.math.vector.Vector3d;
-import com.onaple.crowdbinding.service.GroupService;
 import com.onaple.epicboundaries.WorldAction;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
@@ -11,9 +10,7 @@ import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.world.storage.WorldProperties;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,8 +42,10 @@ public class CreateInstanceForGroupCommand extends CommandAbstract implements Co
 
         List<Player> players = getGroup(player);
 
-        String newWorldName = newWolrdInstance(worldName);
-        teleport(newWorldName, position,players);
+        String newWorldInstance = newWorldInstance(worldName);
+
+        WorldAction worldAction = new WorldAction();
+        worldAction.addPlayersToTransferQueue(players,newWorldInstance,position);
 
         return CommandResult.success();
     }
