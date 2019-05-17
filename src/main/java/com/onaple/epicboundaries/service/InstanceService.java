@@ -1,11 +1,18 @@
 package com.onaple.epicboundaries.service;
 
 import com.flowpowered.math.vector.Vector3d;
+import com.onaple.epicboundaries.EpicBoundaries;
 import com.onaple.epicboundaries.WorldAction;
+import com.onaple.epicboundaries.commands.CommandAbstract;
+import com.onaple.epicboundaries.event.ApparateEvent;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public class InstanceService implements IInstanceService {
     /**
@@ -19,8 +26,12 @@ public class InstanceService implements IInstanceService {
     public boolean apparate(String worldName, String playerName, Vector3d position) {
         return Sponge.getServer().loadWorld(worldName).map(world ->
             Sponge.getServer().getPlayer(playerName).map(player -> {
-                WorldAction worldAction = new WorldAction();
-                worldAction.transferPlayerToWorld(player, world.getLocation(position));
+                Location<World> location = world.getLocation(position);
+                ApparateEvent apparateEvent = new ApparateEvent(player,location);
+                Sponge.getEventManager().post(apparateEvent);
+                if(!apparateEvent.isCancelled()){
+                    EpicBoundaries.getWorldAction().transferPlayerToWorld(player,location);
+                }
                 return true;
             }).orElse(false)
         ).orElse(false);
@@ -29,47 +40,43 @@ public class InstanceService implements IInstanceService {
     /**
      * Try to transfer a group of players to a given world
      * @param worldName Name of the world
-     * @param playerNames Names of the players
+     * @param players  players
      * @param position Position to transfer the players to
      * @return Successful transfer count
      */
     @Override
-    public int apparate(String worldName, List<String> playerNames, Vector3d position) {
+    public int apparate(String worldName, List<Player> players, Vector3d position) {
         return Sponge.getServer().loadWorld(worldName).map(world -> {
-            int playerTransferCount = 0;
-            WorldAction worldAction = new WorldAction();
-            for(String playerName : playerNames) {
-                playerTransferCount += Sponge.getServer().getPlayer(playerName).map(player -> {
-                    worldAction.transferPlayerToWorld(player, world.getLocation(position));
-                    return 1;
-                }).orElse(0);
+            Location<World> location = world.getLocation(position);
+            ApparateEvent apparateEvent = new ApparateEvent(EpicBoundaries.getInstance(),location,players);
+            Sponge.getEventManager().post(apparateEvent);
+            if(!apparateEvent.isCancelled()){
+                EpicBoundaries.getWorldAction().transferPlayersToWorld(players,location);
+                return players.size();
             }
-            return playerTransferCount;
+         return 0;
         }).orElse(0);
     }
 
     /**
      * Try to create an instance from a world and transfer a player to it
      * @param worldToCopy World to copy
-     * @param playerName Name of the player to transfer
-     * @param position Position to transfer the player to
      * @return Optional of world name, if copy successfully initiated
      */
     @Override
-    public Optional<String> createInstance(String worldToCopy, String playerName, Vector3d position) {
-        if (worldToCopy.equals(Sponge.getServer().getDefaultWorldName())) {
+    public Optional<UUID> createInstance(World worldToCopy) {
+        if (worldToCopy.getName().equals(Sponge.getServer().getDefaultWorldName())) {
             return Optional.empty();
         }
-        Sponge.getServer().getWorldProperties(worldToCopy).ifPresent(worldProperties -> {
-            String uuid, newWorldName;
+
+            UUID uuid;
             do {
-                uuid = java.util.UUID.randomUUID().toString();
-                newWorldName = uuid;
-            } while (Sponge.getServer().getWorldProperties(newWorldName).isPresent());
-            WorldAction worldAction = new WorldAction();
-            worldAction.copyWorld(worldProperties, newWorldName);
-            worldAction.addPlayerToTransferQueue(playerName, newWorldName, position);
-        });
-        return Optional.empty();
+                uuid = java.util.UUID.randomUUID();
+
+            } while (Sponge.getServer().getWorldProperties(uuid.toString()).isPresent());
+            EpicBoundaries.getWorldAction().copyWorld(worldToCopy.getProperties(), uuid.toString());
+
+
+        return Optional.of(uuid);
     }
 }

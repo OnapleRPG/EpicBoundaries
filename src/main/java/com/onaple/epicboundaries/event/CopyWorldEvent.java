@@ -2,8 +2,6 @@ package com.onaple.epicboundaries.event;
 
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.impl.AbstractEvent;
-import org.spongepowered.api.event.world.TargetWorldEvent;
-import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 
 public class CopyWorldEvent extends AbstractEvent {

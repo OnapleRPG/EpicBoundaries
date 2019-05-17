@@ -1,7 +1,9 @@
 package com.onaple.epicboundaries.commands;
 
 import com.flowpowered.math.vector.Vector3d;
+import com.onaple.epicboundaries.EpicBoundaries;
 import com.onaple.epicboundaries.WorldAction;
+import com.onaple.epicboundaries.event.ApparateEvent;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -10,6 +12,8 @@ import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.util.Optional;
 
@@ -23,26 +27,23 @@ public class CreateInstanceCommand extends CommandAbstract implements CommandExe
      */
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        Optional<String> worldNameOpt = args.<String>getOne("world");
-        if (!worldNameOpt.isPresent() || worldNameOpt.get().equals(Sponge.getServer().getDefaultWorldName())) {
-            src.sendMessage(Text.of("A world other than default one must be specified."));
-            return CommandResult.empty();
-        }
-        String worldName = worldNameOpt.get();
 
-        Optional<Vector3d> positionOpt = args.<Vector3d>getOne("position");
-        if (!positionOpt.isPresent()) {
-            src.sendMessage(Text.of("A position must be specified."));
-            return CommandResult.empty();
-        }
-        Vector3d position = positionOpt.get();
+        World world = getWorldOtherThanDefault(args);
+
+        Vector3d position = getPosition(args);
 
         Player player = getPlayer(src,args);
 
-        String instanceName = newWorldInstance(worldName);
+        WorldAction wa = EpicBoundaries.getWorldAction();
 
-        WorldAction worldAction = new WorldAction();
-        worldAction.addPlayerToTransferQueue(player.getName(),instanceName,position);
+        String instanceName = wa.newWorldInstance(world);
+
+        Location location = world.getLocation(position);
+        ApparateEvent apparateEvent = new ApparateEvent(player,location);
+        Sponge.getEventManager().post(apparateEvent);
+        if(!apparateEvent.isCancelled()){
+            wa.addPlayerToTransferQueue(player.getName(),instanceName,position);
+        }
 
         return CommandResult.success();
     }

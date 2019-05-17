@@ -13,13 +13,19 @@ import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 
+import javax.inject.Singleton;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+@Singleton
 public class WorldAction {
-    private static List<WorldTeleportationDataBean> pendingTeleportations = new ArrayList<>();
+
+    public WorldAction() {
+    }
+
+    private List<WorldTeleportationDataBean> pendingTeleportations = new ArrayList<>();
 
     /**
      * Transfer the player into a world
@@ -153,5 +159,17 @@ public class WorldAction {
 
             }, minecraftExecutor);
         });
+    }
+
+    public String newWorldInstance(World world) {
+        WorldProperties worldProperties = world.getProperties();
+
+        String newWorldName;
+        do {
+            newWorldName = java.util.UUID.randomUUID().toString();
+        } while (Sponge.getServer().getWorldProperties(newWorldName).isPresent());
+        WorldAction worldAction = new WorldAction();
+        worldAction.copyWorld(worldProperties, newWorldName);
+        return newWorldName;
     }
 }

@@ -13,6 +13,7 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.command.args.CommandArgs;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
@@ -32,7 +33,16 @@ import java.util.stream.Collectors;
 /**
  * @autor Hugo on 12/05/19.
  */
-class CommandAbstract {
+public class CommandAbstract {
+
+    protected World getWorldOtherThanDefault(CommandContext args) throws CommandException {
+        Optional<World> worldNameOpt = args.<World>getOne("world");
+        if (!worldNameOpt.isPresent() || worldNameOpt.get().getName().equals(Sponge.getServer().getDefaultWorldName())) {
+          throw new CommandException(Text.of("A world other than default one must be specified."));
+        }
+     return worldNameOpt.get();
+    }
+
     protected Player getPlayer(CommandSource src, CommandContext args) throws CommandException {
         Optional<Player> playerOpt = args.getOne("player");
         if (!playerOpt.isPresent()) {
@@ -45,53 +55,16 @@ class CommandAbstract {
             return playerOpt.get();
         }
     }
+    protected Vector3d getPosition(CommandContext args) throws CommandException{
+        Optional<Vector3d> positionOpt = args.<Vector3d>getOne("position");
+        if (!positionOpt.isPresent()) {
+            throw new CommandException(Text.of("A position must be specified."));
 
-    protected List<Player> getGroup(Player player) throws CommandException {
-        List<Player> players = new ArrayList<>();
-        Optional<GroupService> optionalGroupService;
-        if (Sponge.getPluginManager().isLoaded("crowdbinding")) {
-            try {
-                optionalGroupService = Sponge.getServiceManager().provide(GroupService.class);
-                if (optionalGroupService.isPresent()) {
-                    GroupService groupService = optionalGroupService.get();
-                    groupService.getGroupId(player).ifPresent(gid -> players.addAll(groupService.getMembers(gid)));
-
-                } else {
-                    EpicBoundaries.getLogger().warn("Could not get CrowdBinding GroupService class");
-                }
-            } catch (NoClassDefFoundError e) {
-                EpicBoundaries.getLogger().warn("Could not get CrowdBinding GroupService class");
-            }
-        } else if (Sponge.getPluginManager().isLoaded("nt-rpg")) {
-            try {
-                EpicBoundaries.getLogger().debug("nt-rpg loaded, check for group members [{}] ",
-                        getGroupMember(player));
-                players.addAll(getGroupMember(player));
-            } catch (NoClassDefFoundError e) {
-                EpicBoundaries.getLogger().warn("Could not get NT-RPG CharacterService class");
-
-            }
-    } else {
-            throw new CommandException(Text.of("You need either ")
-                    .concat(Text.builder("CrowdBinding or NT-RPG").style(TextStyles.BOLD).build())
-                    .concat(Text.of(" use group teleportation")));
         }
-        return players;
+        return positionOpt.get();
     }
 
-    protected void teleport(String worldName, Vector3d position, Player player) throws CommandException {
-        Location<World> location = getLocation(worldName, position);
-        WorldAction worldAction = new WorldAction();
-        worldAction.transferPlayerToWorld(player, location);
-    }
-
-    protected void teleport(String worldName, Vector3d position, List<Player> players) throws CommandException {
-        Location<World> location = getLocation(worldName, position);
-        WorldAction worldAction = new WorldAction();
-        worldAction.transferPlayersToWorld(players, location);
-    }
-
-    private Location<World> getLocation(String worldName, Vector3d position) throws CommandException {
+    protected Location<World> getLocation(String worldName, Vector3d position) throws CommandException {
         Optional<World> worldOpt = Sponge.getServer().loadWorld(worldName);
         if (!worldOpt.isPresent()) {
             throw new CommandException(Text.of("World " + worldName + " doesn't exist."));
@@ -99,25 +72,5 @@ class CommandAbstract {
         return worldOpt.get().getLocation(position);
     }
 
-    protected String newWorldInstance(String worldName) throws CommandException {
-        Optional<WorldProperties> worldProperties = Sponge.getServer().getWorldProperties(worldName);
-        if (!worldProperties.isPresent()) {
-            throw new CommandException(Text.of("The world " + worldName + " was not found and can therefore not be copied."));
-        }
 
-        String newWorldName;
-        do {
-            newWorldName = java.util.UUID.randomUUID().toString();
-        } while (Sponge.getServer().getWorldProperties(newWorldName).isPresent());
-        WorldAction worldAction = new WorldAction();
-        worldAction.copyWorld(worldProperties.get(), newWorldName);
-        return newWorldName;
-    }
-
-    private List<Player> getGroupMember(Player player) {
-        CharacterService characterService = IoC.get().build(CharacterService.class);
-        IActiveCharacter activeCharacter = characterService.getCharacter(player.getUniqueId());
-        Party party = activeCharacter.getParty();
-        return party.getPlayers().stream().map(iActiveCharacter -> iActiveCharacter.getPlayer()).collect(Collectors.toList());
-    }
 }

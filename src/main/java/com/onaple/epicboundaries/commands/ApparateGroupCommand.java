@@ -3,7 +3,9 @@ package com.onaple.epicboundaries.commands;
 import com.flowpowered.math.vector.Vector3d;
 import com.onaple.crowdbinding.service.GroupService;
 import com.onaple.epicboundaries.EpicBoundaries;
+import com.onaple.epicboundaries.GroupHandler;
 import com.onaple.epicboundaries.WorldAction;
+import com.onaple.epicboundaries.event.ApparateEvent;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -31,24 +33,24 @@ public class ApparateGroupCommand extends CommandAbstract implements CommandExec
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
         String worldName = args.<String>getOne("world").orElse("world");
 
-        Optional<Vector3d> positionOpt = args.<Vector3d>getOne("position");
-        if (!positionOpt.isPresent()) {
-            src.sendMessage(Text.of("A position must be specified."));
-            return CommandResult.empty();
-        }
-        Vector3d position = positionOpt.get();
+        Vector3d position = getPosition(args);
 
         Player player = getPlayer(src,args);
 
-        List<Player> players = getGroup(player);
+        List<Player> players =EpicBoundaries.getGroupHandler().getGroup(player);
 
         if (players.size() <= 1) {
             src.sendMessage(Text.of("The player is not within a group."));
             return CommandResult.empty();
         }
 
+        Location<World> location = getLocation(worldName,position);
+        ApparateEvent apparateEvent = new ApparateEvent(player,location,players);
+        Sponge.getEventManager().post(apparateEvent);
+        if(!apparateEvent.isCancelled()){
+            EpicBoundaries.getWorldAction().transferPlayerToWorld(player,location);
+        }
 
-        teleport(worldName,position,players);
         return CommandResult.success();
     }
 }
