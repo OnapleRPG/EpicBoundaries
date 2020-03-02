@@ -1,14 +1,10 @@
 language: java
+dist: trusty
 jdk:
   - oraclejdk8
 
-services:
-  - docker
-
 before_install:
   - gradle wrapper
-  - chmod +x scripts/run-xvfb
-  - scripts/run-xvfb
 install: true
 
 addons:
@@ -17,7 +13,8 @@ addons:
   ssh_known_hosts: onaple.fr
 
 script:
-  - DISPLAY=:99 ./gradlew sonarqube --stacktrace
+  - ./gradlew build --info
+  - 'if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then bash ./gradlew sonarqube --info; fi'
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
@@ -27,17 +24,3 @@ cache:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
 
-before_deploy:
-- openssl aes-256-cbc -K $encrypted_0d7303d7684b_key -iv $encrypted_0d7303d7684b_iv
-  -in deploy_rsa.enc -out /tmp/deploy_rsa -d
-- eval "$(ssh-agent -s)"
-- chmod 600 /tmp/deploy_rsa
-- ssh-add /tmp/deploy_rsa
-
-deploy:
-- provider: script
-  skip_cleanup: true
-  script: bash scripts/deploy.sh
-  on:
-    tags: true
-    all_branches: false
