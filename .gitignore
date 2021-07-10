@@ -1,6 +1,15 @@
 .gradle
 .idea
+.mixin.out
 build
-gradle.bat
+logs
+logs/latest.log
+scripts
 *.iml
-gradle.properties
+gradlew.bat
+.classpath
+.project
+.settings
+.vscode
+bin
+version.properties
